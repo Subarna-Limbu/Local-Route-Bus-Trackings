@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2 class="text-xl font-semibold mb-4">Driver Login</h2>
+    <form method="post" class="bg-white p-4 rounded shadow">
+        {% csrf_token %}
+        <label class="block mb-2">Username:
+            <input type="text" name="username" class="p-2 border rounded w-full" required>
+        </label>
+        <label class="block mb-2">Password:
+            <input type="password" name="password" class="p-2 border rounded w-full" required>
+        </label>
+        <button type="submit" class="bg-blue-500 text-white p-2 rounded">Login</button>
+    </form>
+{% endblock %}

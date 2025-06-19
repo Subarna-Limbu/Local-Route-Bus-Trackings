@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2 class="text-xl font-semibold mb-4">Driver Dashboard</h2>
+    <p>Welcome, {{ request.user.username }}.</p>
+    <p>Vehicle Number: {{ driver.vehicle_number }}</p>
+    {% if driver.verified %}
+        {% if route %}
+            <div class="mt-4">
+                <button id="startTracking" class="bg-green-500 text-white p-2 rounded">Start Tracking</button>
+                <button id="stopTracking" class="bg-red-500 text-white p-2 rounded" disabled>Stop Tracking</button>
+            </div>
+            <p id="trackingStatus" class="mt-4"></p>
+        {% else %}
+            <p class="text-red-500 mt-4">No route assigned. Please contact admin.</p>
+        {% endif %}
+    {% else %}
+        <p>Your account is pending admin verification.</p>
+    {% endif %}
+
+<script>
+{% if route %}
+let socket;
+let geoWatchId = null;
+const busId = "{{ route.id }}";
+const startBtn = document.getElementById('startTracking');
+const stopBtn = document.getElementById('stopTracking');
+const status = document.getElementById('trackingStatus');
+
+startBtn.addEventListener('click', function(){
+    if (socket && socket.readyState === WebSocket.OPEN) return;
+    const wsUrl = 'ws://' + window.location.host + '/ws/location/' + busId + '/';
+    socket = new WebSocket(wsUrl);
+    socket.onopen = function(){
+        status.innerText = "Tracking started.";
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        // Start sending geolocation
+        if (navigator.geolocation) {
+            geoWatchId = navigator.geolocation.watchPosition(function(position) {
+                const data = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                console.log("Sending location:", data);
+                socket.send(JSON.stringify(data));
+            }, function(error) {
+                status.innerText = "Geolocation error: " + error.message;
+                console.error("Geolocation error:", error);
+            }, { enableHighAccuracy: true });
+        } else {
+            status.innerText = "Geolocation is not supported by this browser.";
+            console.error("Geolocation is not supported by this browser.");
+        }
+    };
+    socket.onerror = function(error){
+        status.innerText = "WebSocket error. See console.";
+        console.error("WebSocket error:", error);
+    };
+    socket.onclose = function(){
+        status.innerText = "Tracking stopped.";
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        if (geoWatchId !== null) {
+            navigator.geolocation.clearWatch(geoWatchId);
+            geoWatchId = null;
+        }
+    };
+});
+
+stopBtn.addEventListener('click', function(){
+    if (socket) {
+        socket.close();
+    }
+    if (geoWatchId !== null) {
+        navigator.geolocation.clearWatch(geoWatchId);
+        geoWatchId = null;
+    }
+    status.innerText = "Tracking stopped.";
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+});
+stopBtn.disabled = true;
+{% endif %}
+</script>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Local Transportation System</title>
+    <!-- Tailwind CSS CDN for a modern and responsive UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<!-- Use flex, flex-col and min-h-screen to allow proper footer placement -->
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Smart Transport</h1>
+        <nav>
+            <ul class="flex space-x-4">
+                <li><a href="{% url 'homepage' %}" class="hover:underline">Home</a></li>
+                <li><a href="{% url 'driver_register' %}" class="hover:underline">Driver Register</a></li>
+                <li><a href="{% url 'driver_login' %}" class="hover:underline">Driver Login</a></li>
+                <li><a href="{% url 'user_register' %}" class="hover:underline">User Register</a></li>
+                <li><a href="{% url 'user_login' %}" class="hover:underline">User Login</a></li>
+            </ul>
+        </nav>
+    </header>
+    <!-- Main content area expands to push footer to the bottom -->
+    <main class="flex-grow p-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="bg-green-100 p-2 mb-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="bg-blue-600 text-white p-4 text-center">
+        &copy; 2025 Smart Transport
+    </footer>
+</body>
+</html>
