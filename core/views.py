@@ -16,6 +16,7 @@ def driver_register(request):
     return render(request, 'registration/driver_register.html')
 from django.views.decorators.csrf import csrf_exempt
 import json
+import logging
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -28,6 +29,8 @@ from .models import Bookmark, PickupRequest, Message
 from django.views.decorators.http import require_POST
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+
+logger = logging.getLogger(__name__)
 
 
 def homepage(request):
@@ -286,23 +289,27 @@ def send_pickup_request(request):
         message = request.POST.get('message', '')
         bus = Bus.objects.get(id=bus_id)
         pickup = PickupRequest.objects.create(user=request.user, bus=bus, stop=stop, message=message)
+        # Log the notification payload for auditing
+        try:
+            logger.info('PickupRequest created: id=%s user_id=%s bus_id=%s stop=%s', pickup.id, request.user.id, bus.id, extra={'stop': stop})
+        except Exception:
+            logger.exception('Failed to log pickup creation')
         # Notify driver via channels group
         try:
             channel_layer = get_channel_layer()
             if bus.driver and bus.driver.user:
                 driver_group = f'driver_{bus.driver.user.id}'
-                async_to_sync(channel_layer.group_send)(
-                    driver_group,
-                    {
-                        'type': 'pickup_notification',
-                        'pickup_id': pickup.id,
-                        'user_id': request.user.id,
-                        'user_username': getattr(request.user, 'username', None),
-                        'bus_id': bus.id,
-                        'stop': pickup.stop,
-                        'message': pickup.message,
-                    }
-                )
+                payload = {
+                    'type': 'pickup_notification',
+                    'pickup_id': pickup.id,
+                    'user_id': request.user.id,
+                    'user_username': getattr(request.user, 'username', None),
+                    'bus_id': bus.id,
+                    'stop': pickup.stop,
+                    'message': pickup.message,
+                }
+                logger.info('Sending pickup_notification to %s payload=%s', driver_group, payload)
+                async_to_sync(channel_layer.group_send)(driver_group, payload)
         except Exception:
             pass
         return JsonResponse({'status': 'success', 'pickup_id': pickup.id})
@@ -332,6 +339,14 @@ def driver_notifications(request):
         for p in pickups
     ]
     return JsonResponse({'status': 'success', 'pickups': data, 'unread_count': unread_count, 'recent': data[:10]})
+
+
+def user_profile(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        return render(request, 'user/profile.html', {'profile_user': user})
+    except User.DoesNotExist:
+        return render(request, 'user/profile.html', {'profile_user': None})
 
 
 @login_required

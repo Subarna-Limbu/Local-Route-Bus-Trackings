@@ -17,5 +17,6 @@ urlpatterns = [
     path('driver/notifications/', views.driver_notifications, name='driver_notifications'),
     path('api/mark_pickup_seen/', views.mark_pickup_seen, name='mark_pickup_seen'),
     path('api/clear_all_pickups/', views.clear_all_pickups, name='clear_all_pickups'),
+    path('user/profile/<int:user_id>/', views.user_profile, name='user_profile'),
     path('messages/<int:other_user_id>/', views.fetch_messages, name='fetch_messages'),
 ]

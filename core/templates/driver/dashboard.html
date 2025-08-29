@@ -154,8 +154,9 @@ document.querySelectorAll('.seat-btn').forEach(function(btn) {
 {% if request.user.is_authenticated and request.user.driver_profile %}
     (function(){
         const driverId = {{ request.user.id }};
-        const chatRoom = 'driver_' + driverId; // connect to driver-specific room
-        const driverSocket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + chatRoom + '/');
+    const chatRoom = 'driver_' + driverId; // connect to driver-specific room
+    const driverSocket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + chatRoom + '/');
+    driverSocket.onopen = function(){ console.log('Driver chat socket opened:', chatRoom); };
         const notifBox = document.getElementById('driverNotifications');
         const notifBadge = document.getElementById('notifBadge');
 
@@ -181,7 +182,7 @@ document.querySelectorAll('.seat-btn').forEach(function(btn) {
                     const username = rawUsername && !rawUsername.startsWith('user_') ? rawUsername : null;
                     const display = username ? username : ('User #' + p.user_id);
                     const el = document.createElement('div');
-                    el.innerText = `Pickup from ${display} at ${p.stop}: ${p.message}`;
+                    el.innerHTML = `Pickup from <a href=\"/user/profile/${p.user_id}/\" target=\"_blank\">${display}</a> at ${p.stop}: ${p.message}`;
                     el.setAttribute('data-pickup-id', p.id);
                     el.setAttribute('data-user-id', p.user_id);
                     if (username) el.setAttribute('data-username', username);
@@ -196,14 +197,21 @@ document.querySelectorAll('.seat-btn').forEach(function(btn) {
         const sendBtn = document.getElementById('driverSendChat');
 
         driverSocket.onmessage = function(e){
-            const d = JSON.parse(e.data);
+            console.log('Driver WS raw message:', e.data);
+            let d = null;
+            try {
+                d = JSON.parse(e.data);
+            } catch(err){
+                console.error('Driver WS parse error', err, e.data);
+                return;
+            }
             console.log('Driver WS message received:', d);
             if (d.type === 'pickup_notification') {
                 const el = document.createElement('div');
                 const rawUsername = d.user_username || null;
                 const username = rawUsername && !rawUsername.startsWith('user_') ? rawUsername : null;
                 const displayName = username ? username : ('User #' + d.user_id);
-                el.innerText = `Pickup from ${displayName} for bus ${d.bus_id} at ${d.stop}: ${d.message}`;
+                el.innerHTML = `Pickup from <a href=\"/user/profile/${d.user_id}/\" target=\"_blank\">${displayName}</a> for bus ${d.bus_id} at ${d.stop}: ${d.message}`;
                 el.setAttribute('data-user-id', d.user_id);
                 if (username) el.setAttribute('data-username', username);
                 el.setAttribute('data-pickup-id', d.pickup_id || '');
@@ -215,12 +223,35 @@ document.querySelectorAll('.seat-btn').forEach(function(btn) {
                 const current = parseInt(notifBadge.innerText || '0') || 0;
                 setBadge(current + 1);
             } else if (d.type === 'chat_message') {
-                const el = document.createElement('div');
-                el.innerText = (d.sender_id === {{ request.user.id }} ? 'You: ' : 'User: ') + d.content;
-                chatLog.appendChild(el);
-                chatLog.scrollTop = chatLog.scrollHeight;
+                try {
+                    const el = document.createElement('div');
+                    const isMe = (d.sender_id === {{ request.user.id }});
+                    let senderLabel = 'User';
+                    if (isMe) {
+                        senderLabel = 'You';
+                    } else if (d.sender_name) {
+                        senderLabel = d.sender_name + ' (user)';
+                    }
+                    el.innerText = (senderLabel + ': ') + d.content;
+                    if (chatLog) {
+                            chatLog.appendChild(el);
+                            console.log('Appended to driverChatLog:', el.innerText);
+                            chatLog.scrollTop = chatLog.scrollHeight;
+                    } else {
+                        console.warn('driverChatLog element not found; message dropped in UI. Message:', el.innerText);
+                    }
+                } catch (err) {
+                    console.error('Error appending chat message in driver dashboard:', err, d);
+                }
             }
         };
+    // small visual debug of last incoming raw frame
+    const lastIncoming = document.createElement('div');
+    lastIncoming.id = 'lastIncomingRaw';
+    lastIncoming.style.fontSize = '12px';
+    lastIncoming.style.color = '#555';
+    lastIncoming.style.marginTop = '6px';
+    notifBox.parentNode.insertBefore(lastIncoming, notifBox.nextSibling);
 
                 sendBtn && sendBtn.addEventListener('click', function(){
             const content = chatInput.value.trim();

@@ -166,18 +166,38 @@
     let chatSocket = null;
     if (chatRoom) {
         chatSocket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + chatRoom + '/');
+        chatSocket.onopen = function(){ console.log('User chat socket opened:', chatRoom); };
         chatSocket.onmessage = function(e){
-            const d = JSON.parse(e.data);
+            console.log('User WS raw message:', e.data);
+            let d = null;
+            try { d = JSON.parse(e.data); } catch(err){ console.error('User WS parse error', err); return; }
             if (d.type === 'chat_message') {
                 const el = document.createElement('div');
-                el.innerText = (d.sender_id === {{ request.user.id }} ? 'You: ' : 'Driver: ') + d.content;
+                const isMe = (d.sender_id === {{ request.user.id }});
+                let senderLabel = 'Driver';
+                if (isMe) {
+                    senderLabel = 'You';
+                } else if (d.sender_name) {
+                    senderLabel = d.sender_name + ' (driver)';
+                }
+                el.innerText = (senderLabel + ': ') + d.content;
                 chatLog.appendChild(el);
+                chatLog.appendChild(el);
+                console.log('Appended to user chatLog:', el.innerText);
                 chatLog.scrollTop = chatLog.scrollHeight;
             } else if (d.type === 'pickup_notification') {
                 // Ignore - pickup notifications go to driver
             }
         }
     }
+
+    // debug area for last incoming raw frame
+    const lastIncomingUser = document.createElement('div');
+    lastIncomingUser.id = 'lastIncomingUserRaw';
+    lastIncomingUser.style.fontSize = '12px';
+    lastIncomingUser.style.color = '#555';
+    lastIncomingUser.style.marginTop = '6px';
+    chatLog.parentNode.insertBefore(lastIncomingUser, chatLog.nextSibling);
 
     sendChat && sendChat.addEventListener('click', function(){
         const content = chatInput.value.trim();
