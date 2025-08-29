@@ -11,4 +11,11 @@ urlpatterns = [
     path('user/register/', views.user_register, name='user_register'),
     path('track/<int:bus_id>/', views.track_bus, name='track_bus'),
     path('api/toggle_seat/', views.toggle_seat, name='toggle_seat'),
+    path('api/bookmark_bus/', views.bookmark_bus, name='bookmark_bus'),
+    path('api/remove_bookmark/', views.remove_bookmark, name='remove_bookmark'),
+    path('api/send_pickup/', views.send_pickup_request, name='send_pickup'),
+    path('driver/notifications/', views.driver_notifications, name='driver_notifications'),
+    path('api/mark_pickup_seen/', views.mark_pickup_seen, name='mark_pickup_seen'),
+    path('api/clear_all_pickups/', views.clear_all_pickups, name='clear_all_pickups'),
+    path('messages/<int:other_user_id>/', views.fetch_messages, name='fetch_messages'),
 ]

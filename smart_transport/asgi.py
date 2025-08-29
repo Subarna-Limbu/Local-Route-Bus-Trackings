@@ -9,13 +9,15 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 
 import os
 import django
+
+# Ensure settings are set before importing any app modules that may import models
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smart_transport.settings')
+django.setup()
+
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 from channels.auth import AuthMiddlewareStack
 import core.routing
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smart_transport.settings')
-django.setup()
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),

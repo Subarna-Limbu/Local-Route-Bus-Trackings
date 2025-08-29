@@ -40,11 +40,40 @@
         </div>
         <div class="text-sm text-gray-600 mt-2">Green = available, Red = occupied. (Read-only for passengers)</div>
     </div>
+    <div class="mt-6">
+        {% if user.is_authenticated %}
+            <button id="bookmarkBtn" class="bg-blue-500 text-white p-2 rounded">
+                {% if is_bookmarked %}Remove Bookmark{% else %}Bookmark this bus{% endif %}
+            </button>
+            <div class="mt-4">
+                <h4 class="font-semibold">Request Pickup</h4>
+                <textarea id="pickupStop" class="p-2 border rounded w-96" rows="2">{{ default_pickup }}</textarea>
+                <div class="mt-2">
+                    <input id="pickupMsg" placeholder="Optional message" class="p-2 border rounded w-64" />
+                    <button id="sendPickup" class="bg-green-500 text-white p-2 rounded ml-2">Send</button>
+                </div>
+            </div>
+
+            <!-- Toast container -->
+            <div id="toastContainer" style="position:fixed; top:20px; right:20px; z-index:9999;"></div>
+
+            <div id="chatContainer" class="mt-6 border p-2" style="max-width:600px;">
+                <h4 class="font-semibold">Chat with Driver</h4>
+                <div id="chatLog" style="height:200px; overflow:auto; border:1px solid #ddd; padding:8px; background:#fafafa;"></div>
+                <div class="mt-2">
+                    <input id="chatInput" placeholder="Type message" class="p-2 border rounded w-3/4" />
+                    <button id="sendChat" class="bg-blue-600 text-white p-2 rounded">Send</button>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-sm text-gray-600">Log in to bookmark, request pickup, or chat with driver.</div>
+        {% endif %}
+    </div>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         const busId = "{{ bus_id }}";
-        const socket = new WebSocket('ws://' + window.location.host + '/ws/location/' + busId + '/');
+        const socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/location/' + busId + '/');
         let map = L.map('map').setView([27.7172, 85.3240], 13); // Default to Kathmandu
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -72,6 +101,92 @@
                 }
             }
         }, 10000);
+    </script>
+    <script>
+    // Bookmark logic
+    {% if user.is_authenticated %}
+    const bookmarkBtn = document.getElementById('bookmarkBtn');
+    bookmarkBtn && bookmarkBtn.addEventListener('click', function(){
+        const url = '{{ is_bookmarked|yesno:"/api/remove_bookmark/,/api/bookmark_bus/" }}';
+        fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: 'bus_id=' + encodeURIComponent(busId)
+        }).then(r => r.json()).then(data => {
+            if (data.status === 'success') {
+                if (bookmarkBtn.innerText.includes('Remove')) {
+                    bookmarkBtn.innerText = 'Bookmark this bus';
+                } else {
+                    bookmarkBtn.innerText = 'Remove Bookmark';
+                }
+            }
+        });
+    });
+
+    // Pickup request via AJAX with validation and toasts
+    function showToast(message, type){
+        const el = document.createElement('div');
+        el.innerText = message;
+        el.style.padding = '10px 14px';
+        el.style.borderRadius = '6px';
+        el.style.marginTop = '8px';
+        el.style.color = '#fff';
+        el.style.minWidth = '180px';
+        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+        if (type === 'success') el.style.background = '#16a34a'; else if (type === 'error') el.style.background = '#dc2626'; else el.style.background = '#374151';
+        const container = document.getElementById('toastContainer');
+        container.appendChild(el);
+        setTimeout(()=>{ el.style.opacity = '0'; setTimeout(()=>el.remove(),400); }, 3000);
+    }
+
+    document.getElementById('sendPickup').addEventListener('click', function(){
+        const stop = document.getElementById('pickupStop').value.trim();
+        const message = document.getElementById('pickupMsg').value.trim();
+        if (!stop) { showToast('Please enter a pickup location.', 'error'); return; }
+        const btn = this;
+        btn.disabled = true;
+        fetch('/api/send_pickup/', {
+            method: 'POST',
+            headers: {'Content-Type':'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: 'bus_id=' + encodeURIComponent(busId) + '&stop=' + encodeURIComponent(stop) + '&message=' + encodeURIComponent(message)
+        }).then(r => r.json()).then(data => {
+            if (data.status === 'success') {
+                showToast('Pickup request sent.', 'success');
+            } else {
+                showToast('Error: ' + (data.error || 'failed'), 'error');
+            }
+        }).catch(err=>{ showToast('Network error', 'error'); }).finally(()=>{ btn.disabled = false; });
+    });
+
+    // Chat websocket
+    const chatLog = document.getElementById('chatLog');
+    const chatInput = document.getElementById('chatInput');
+    const sendChat = document.getElementById('sendChat');
+    const chatRoom = "{{ chat_room }}";
+    let chatSocket = null;
+    if (chatRoom) {
+        chatSocket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + chatRoom + '/');
+        chatSocket.onmessage = function(e){
+            const d = JSON.parse(e.data);
+            if (d.type === 'chat_message') {
+                const el = document.createElement('div');
+                el.innerText = (d.sender_id === {{ request.user.id }} ? 'You: ' : 'Driver: ') + d.content;
+                chatLog.appendChild(el);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            } else if (d.type === 'pickup_notification') {
+                // Ignore - pickup notifications go to driver
+            }
+        }
+    }
+
+    sendChat && sendChat.addEventListener('click', function(){
+        const content = chatInput.value.trim();
+        if (!content || !chatSocket) return;
+        const payload = {type: 'chat_message', content: content, recipient_id: {% if bus and bus.driver and bus.driver.user %}{{ bus.driver.user.id }}{% else %}null{% endif %}, bus_id: busId};
+        chatSocket.send(JSON.stringify(payload));
+        chatInput.value = '';
+    });
+    {% endif %}
     </script>
     <div id="locationStatus" class="mt-2 text-red-500 font-semibold"></div>
 {% endblock %}
