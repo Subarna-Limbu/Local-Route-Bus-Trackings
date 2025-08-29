@@ -1,10 +1,106 @@
 {% extends 'base.html' %}
 {% block content %}
   {% if profile_user %}
-    <h2>{{ profile_user.username }}</h2>
-    <p>Email: {{ profile_user.email }}</p>
-    <!-- add more profile fields if available -->
+    <div class="max-w-4xl mx-auto py-8">
+      <div class="bg-white shadow rounded p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-semibold">{{ profile_user.username }}</h2>
+            <p class="text-sm text-gray-600">{{ profile_user.email }}</p>
+          </div>
+          <div>
+            {% if request.user.id == profile_user.id %}
+              <a href="{% url 'track_bus' 1 %}" class="text-sm text-indigo-600">Manage your account</a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2">
+            <h3 class="font-semibold mb-2">Tracked / Recent Buses</h3>
+            {% if tracked_buses %}
+              <ul class="space-y-2">
+                {% for bus in tracked_buses %}
+                  <li class="p-3 border rounded flex items-center justify-between">
+                    <div>
+                      <div class="font-medium">{{ bus.number_plate }}</div>
+                      <div class="text-sm text-gray-500">Route: {% if bus.route %}{{ bus.route.name }}{% else %}&mdash;{% endif %}</div>
+                    </div>
+                    <div>
+                      <a href="{% url 'track_bus' bus.id %}" class="text-indigo-600 text-sm">Track</a>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-sm text-gray-500">No recent tracked buses.</p>
+            {% endif %}
+
+            <h3 class="font-semibold mt-6 mb-2">Pickup history</h3>
+            {% if pickups %}
+              <ul class="space-y-2">
+                {% for p in pickups %}
+                  <li class="p-3 border rounded">
+                    <div class="flex justify-between">
+                      <div>
+                        <div class="text-sm">To: {% if p.bus %}{{ p.bus.number_plate }}{% else %}&mdash;{% endif %} — Stop: {{ p.stop }}</div>
+                        <div class="text-xs text-gray-500">{{ p.created_at }}</div>
+                        <div class="mt-1 text-sm">{{ p.message }}</div>
+                      </div>
+                      <div class="text-sm">
+                        <span class="px-2 py-1 rounded {% if p.seen_by_driver %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">{% if p.seen_by_driver %}Seen{% else %}Unseen{% endif %}</span>
+                      </div>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-sm text-gray-500">No pickup history.</p>
+            {% endif %}
+          </div>
+
+          <div>
+            <h3 class="font-semibold mb-2">Bookmarks</h3>
+            {% if bookmarks %}
+              <ul class="space-y-2">
+                {% for b in bookmarks %}
+                  <li class="p-3 border rounded flex items-center justify-between">
+                    <div>
+                      <div class="font-medium">{% if b.bus %}{{ b.bus.number_plate }}{% else %}&mdash;{% endif %}</div>
+                      <div class="text-sm text-gray-500">Added: {{ b.created_at }}</div>
+                    </div>
+                    <div>
+                      <button data-bus-id="{{ b.bus.id }}" class="remove-bookmark text-sm text-red-600">Remove</button>
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-sm text-gray-500">No bookmarks yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('click', function(e){
+        if(e.target && e.target.classList.contains('remove-bookmark')){
+          var busId = e.target.getAttribute('data-bus-id');
+          fetch('{% url "remove_bookmark" %}',{
+            method:'POST',
+            headers:{ 'Content-Type':'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ bus_id: busId })
+          }).then(r=>r.json()).then(j=>{
+            if(j.status=='success'){
+              e.target.closest('li').remove();
+            } else {
+              alert('Failed to remove bookmark');
+            }
+          })
+        }
+      })
+    </script>
   {% else %}
-    <p>User not found.</p>
+    <div class="p-6">User not found.</div>
   {% endif %}
 {% endblock %}

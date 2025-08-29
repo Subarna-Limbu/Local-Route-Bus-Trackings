@@ -19,4 +19,6 @@ urlpatterns = [
     path('api/clear_all_pickups/', views.clear_all_pickups, name='clear_all_pickups'),
     path('user/profile/<int:user_id>/', views.user_profile, name='user_profile'),
     path('messages/<int:other_user_id>/', views.fetch_messages, name='fetch_messages'),
+    # custom logout view (accepts GET) for convenience
+    path('logout/', views.logout_view, name='logout'),
 ]

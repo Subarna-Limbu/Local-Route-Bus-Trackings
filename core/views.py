@@ -343,10 +343,42 @@ def driver_notifications(request):
 
 def user_profile(request, user_id):
     try:
-        user = User.objects.get(id=user_id)
-        return render(request, 'user/profile.html', {'profile_user': user})
+        profile_user = User.objects.get(id=user_id)
+        # pickup history for this user
+        pickups = PickupRequest.objects.filter(user=profile_user).order_by('-created_at')[:200]
+        # bookmarks for this user
+        bookmarks = Bookmark.objects.filter(user=profile_user).select_related('bus').order_by('-created_at')[:200]
+
+        # derive a simple "tracked_buses" list from pickups and bookmarks (unique, recent first)
+        tracked = []
+        seen = set()
+        for p in pickups:
+            if p.bus and p.bus.id not in seen:
+                tracked.append(p.bus)
+                seen.add(p.bus.id)
+        for b in bookmarks:
+            if b.bus and b.bus.id not in seen:
+                tracked.append(b.bus)
+                seen.add(b.bus.id)
+
+        context = {
+            'profile_user': profile_user,
+            'pickups': pickups,
+            'bookmarks': bookmarks,
+            'tracked_buses': tracked,
+        }
+        return render(request, 'user/profile.html', context)
     except User.DoesNotExist:
         return render(request, 'user/profile.html', {'profile_user': None})
+
+
+def logout_view(request):
+    """Simple logout view that accepts GET and redirects to homepage."""
+    try:
+        logout(request)
+    except Exception:
+        pass
+    return redirect('homepage')
 
 
 @login_required
