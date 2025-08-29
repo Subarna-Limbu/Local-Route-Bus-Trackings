@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Smart Local Transportation System</title>
-    <!-- Tailwind CSS CDN for a modern and responsive UI -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     {% block extra_head %}{% endblock %}
 </head>
-<!-- Use flex, flex-col and min-h-screen to allow proper footer placement -->
+
 <body class="bg-gray-100 flex flex-col min-h-screen">
     <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
         <h1 class="text-2xl font-bold">Smart Transport</h1>
@@ -21,7 +21,7 @@
             </ul>
         </nav>
     </header>
-    <!-- Main content area expands to push footer to the bottom -->
+    <!-- Main content -->
     <main class="flex-grow p-4">
         {% if messages %}
             {% for message in messages %}

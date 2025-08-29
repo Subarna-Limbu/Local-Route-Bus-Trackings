@@ -22,14 +22,15 @@
         </label>
         <button type="submit" class="bg-blue-500 text-white p-2 rounded">Search Buses</button>
     </form>
-    {% if routes %}
+    {% if buses_info %}
         <h3 class="text-lg font-semibold mb-2">Available Buses</h3>
         <ul>
-            {% for route in routes %}
+            {% for info in buses_info %}
                 <li class="mb-2 p-2 bg-white shadow rounded">
-                    <strong>{{ route.name }}</strong>
-                    <p>Stops: {{ route.stops }}</p>
-                    <a href="#" onclick="startTracking('{{ route.id }}')" class="text-blue-500 hover:underline">Track Bus</a>
+                    <strong>{{ info.route.name }}</strong> (Bus: {{ info.bus.number_plate }})<br>
+                    <span>ETA to pickup: {{ info.eta }} min</span><br>
+                    <span>Available Seats: {{ info.available_seats }} / {{ info.bus.total_seats }}</span><br>
+                    <a href="#" onclick="startTracking('{{ info.bus.id }}')" class="text-blue-500 hover:underline">Track & View Seats</a>
                 </li>
             {% endfor %}
         </ul>

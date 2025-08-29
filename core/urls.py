@@ -10,4 +10,5 @@ urlpatterns = [
     path('user/login/', views.user_login, name='user_login'),
     path('user/register/', views.user_register, name='user_register'),
     path('track/<int:bus_id>/', views.track_bus, name='track_bus'),
+    path('api/toggle_seat/', views.toggle_seat, name='toggle_seat'),
 ]

@@ -3,13 +3,38 @@
     <h2 class="text-xl font-semibold mb-4">Driver Dashboard</h2>
     <p>Welcome, {{ request.user.username }}.</p>
     <p>Vehicle Number: {{ driver.vehicle_number }}</p>
+
     {% if driver.verified %}
-        {% if route %}
+        {% if route and bus %}
             <div class="mt-4">
                 <button id="startTracking" class="bg-green-500 text-white p-2 rounded">Start Tracking</button>
                 <button id="stopTracking" class="bg-red-500 text-white p-2 rounded" disabled>Stop Tracking</button>
             </div>
             <p id="trackingStatus" class="mt-4"></p>
+            <h3 class="text-lg font-semibold mt-6 mb-2">Seat Arrangement ({{ bus.total_seats }} seats)</h3>
+            <div id="seatGrid" class="grid gap-2" style="grid-template-columns: repeat(5, 40px); max-width: 220px;">
+                {% for seat, col in seat_grid_columns %}
+                    {% if forloop.counter0|divisibleby:4 and forloop.counter0 < last_row_start %}
+                        <div style="grid-column: 1 / span 5; height: 5px;"></div>
+                    {% endif %}
+                    <button class="seat-btn {% if seat.is_available %}bg-green-400{% else %}bg-red-500{% endif %} text-white rounded w-10 h-10 focus:outline-none" 
+                        data-seat-id="{{ seat.id }}" 
+                        style="grid-column: {{ col }};"
+                        >{{ seat.seat_number }}</button>
+                {% endfor %}
+            </div>
+            <div class="text-sm text-gray-600 mt-2">Click a seat to toggle availability (green = available, red = occupied).</div>
+        {% elif route and not bus %}
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <label class="block mb-2">Total Seats:
+                    <input type="number" name="total_seats" min="10" max="60" value="25" class="p-2 border rounded w-24" required>
+                </label>
+                <label class="block mb-2">Bus Number Plate:
+                    <input type="text" name="number_plate" class="p-2 border rounded w-40" required>
+                </label>
+                <button type="submit" class="bg-blue-500 text-white p-2 rounded">Create Bus</button>
+            </form>
         {% else %}
             <p class="text-red-500 mt-4">No route assigned. Please contact admin.</p>
         {% endif %}
@@ -17,8 +42,9 @@
         <p>Your account is pending admin verification.</p>
     {% endif %}
 
+
 <script>
-{% if route %}
+{% if route and bus %}
 let socket;
 let geoWatchId = null;
 const busId = "{{ route.id }}";
@@ -80,6 +106,33 @@ stopBtn.addEventListener('click', function(){
     stopBtn.disabled = true;
 });
 stopBtn.disabled = true;
+
+// Seat toggle logic
+document.querySelectorAll('.seat-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const seatId = this.getAttribute('data-seat-id');
+        fetch('/api/toggle_seat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ seat_id: seatId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (data.is_available) {
+                    this.classList.remove('bg-red-500');
+                    this.classList.add('bg-green-400');
+                } else {
+                    this.classList.remove('bg-green-400');
+                    this.classList.add('bg-red-500');
+                }
+            }
+        });
+    });
+});
 {% endif %}
 </script>
 

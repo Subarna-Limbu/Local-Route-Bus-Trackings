@@ -7,7 +7,7 @@
             padding: 0;
         }
         #mainContent {
-            height: calc(100vh - 120px); /* Adjust 120px if your header/footer are taller/shorter */
+            height: calc(100vh - 120px);
             min-height: 400px;
             width: 100vw;
             margin: 0;
@@ -19,9 +19,26 @@
             min-height: 400px;
         }
     </style>
-    <h2 class="text-xl font-semibold mb-4">Live Bus Tracking</h2>
+    <h2 class="text-xl font-semibold mb-4">Live Bus Tracking & Seat Availability</h2>
     <div id="mainContent">
         <div id="map"></div>
+    </div>
+    <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-2">Seat Arrangement ({{ bus.total_seats }} seats)</h3>
+        <div id="seatGrid" class="grid gap-2" style="grid-template-columns: repeat(5, 40px); max-width: 220px;">
+            {% for seat, col in seat_grid_columns %}
+                {% if forloop.counter0|divisibleby:4 and forloop.counter0 < last_row_start %}
+                    <div style="grid-column: 1 / span 5; height: 5px;"></div>
+                {% endif %}
+                <button class="seat-btn {% if seat.is_available %}bg-green-400{% else %}bg-red-500{% endif %} text-white rounded w-10 h-10 focus:outline-none cursor-default" 
+                    data-seat-id="{{ seat.id }}" 
+                    style="grid-column: {{ col }};"
+                    disabled
+                    title="Seat {{ seat.seat_number }} - {% if seat.is_available %}Available{% else %}Occupied{% endif %}"
+                    >{{ seat.seat_number }}</button>
+            {% endfor %}
+        </div>
+        <div class="text-sm text-gray-600 mt-2">Green = available, Red = occupied. (Read-only for passengers)</div>
     </div>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -36,7 +53,6 @@
         let locationReceived = false;
         socket.onmessage = function(event){
             const data = JSON.parse(event.data);
-            console.log("Received location:", data);
             if (data.lat && data.lng) {
                 locationReceived = true;
                 if (!marker) {
@@ -48,11 +64,9 @@
                 document.getElementById('locationStatus').innerText = "Bus location updated.";
             }
         };
-        // Show a message if no location data is received after 10 seconds
         setTimeout(function(){
             if (!locationReceived) {
-                document.getElementById('locationStatus').innerText = "No live location received. The bus may not be online or tracking is not started.";
-                // Optionally, show a fallback marker at the default location
+                document.getElementById('locationStatus').innerText = "";
                 if (!marker) {
                     marker = L.marker([27.7172, 85.3240]).addTo(map);
                 }

@@ -1,1 +1,0 @@
- daphne smart_transport.asgi:application
