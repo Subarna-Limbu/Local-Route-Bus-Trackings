@@ -1,85 +1,915 @@
-{% extends 'base.html' %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Tracking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        html, body {
-            height: 100%;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        #mainContent {
-            height: calc(100vh - 120px);
-            min-height: 400px;
-            width: 100vw;
+
+        :root {
+            --primary: #1a56db;
+            --secondary: #0f2e72;
+            --accent: #ff6b35;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+        }
+
+        body {
+            background-color: #f9fafb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Upper Header Styles */
+        .upper-header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+         .welcome-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .welcome-message img {
+            height: 40px;
+        }
+
+        .welcome-text {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .welcome-text span {
+            color: var(--accent);
+        }
+
+        .upper-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upper-header p {
             margin: 0;
-            padding: 0;
         }
+
+        .upper-header i {
+            margin-right: 5px;
+            color: var(--accent);
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 40px;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-text span {
+            color: var(--accent);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 1.1rem;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* User menu styles */
+        .user-menu-container {
+            position: relative;
+        }
+
+        #userMenuBtn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.3s;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        #userMenuBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #userMenu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 8px;
+            width: 200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            z-index: 1000;
+            display: none;
+        }
+
+        #userMenu a {
+            display: block;
+            padding: 12px 16px;
+            color: var(--dark);
+            text-decoration: none;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        #userMenu a:hover {
+            background: #f3f4f6;
+        }
+
+        #userMenu a:last-child {
+            border-bottom: none;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            padding: 40px 0;
+            min-height: calc(100vh - 400px);
+        }
+
+        .tracking-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .tracking-title {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #mapContainer {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
         #map {
             width: 100%;
             height: 100%;
-            min-height: 400px;
+        }
+
+        .seat-section {
+            margin-top: 30px;
+        }
+
+       .seat-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(5, 1fr); /* default: 5 per row */
+    max-width: 500px;
+    margin: 15px auto;
+}
+
+        .seat-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: default;
+            border: none;
+        }
+
+        .available {
+            background-color: #4ade80;
+            color: white;
+        }
+
+        .occupied {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .user-actions {
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .bookmark {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .bookmark:hover {
+            background-color: var(--secondary);
+        }
+
+        .pickup-request {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .pickup-request:hover {
+            background-color: #15803d;
+        }
+
+        .chat-container {
+            margin-top: 30px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+
+        .chat-log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: white;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .chat-input {
+            width: calc(100% - 100px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+
+        .send-btn {
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .send-btn:hover {
+            background-color: var(--secondary);
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .error {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .success {
+            background-color: #dcfce7;
+            color: #16a34a;
+        }
+
+        /* Toast Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-top: 8px;
+            color: white;
+            min-width: 200px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            opacity: 1;
+            transition: opacity 0.4s;
+        }
+
+        .toast-success {
+            background-color: #16a34a;
+        }
+
+        .toast-error {
+            background-color: #dc2626;
+        }
+
+        .toast-info {
+            background-color: #374151;
+        }
+
+        /* Footer Styles */
+        footer {
+            background: linear-gradient(135deg, #0f2e72 0%, #1a56db 100%);
+            color: white;
+            padding: 60px 0 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+            padding: 0 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ff6b35;
+            font-weight: 700;
+        }
+
+        .footer-column h3 span {
+            display: block;
+            font-size: 1.2rem;
+            color: #fff;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+        .footer-column h3 .Slogan{
+            font-size: 1.3rem;
+            color: #ff6b35;
+            margin-top: 5px;
+            font-weight: 700;
+            font-family : 'Segoe UI', sans-serif;
+        }
+        .footer-column p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .footer-links {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .footer-links a {
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            color: #ff6b35;
+        }
+
+        .contact-info {
+            list-style: none;
+        }
+
+        .contact-info li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .contact-info i {
+            color: #ff6b35;
+            margin-top: 4px;
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        .app-badges {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .app-badge {
+            display: inline-flex;
+            align-items: center;
+            background: white;
+            color: #1a56db;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-badge i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #9ca3af;
+            padding: 30px 40px 0;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: #ff6b35;
+            transform: translateY(-3px);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .seat-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+        }
+
+        @media (max-width: 768px) {
+             .header-content {
+        flex-wrap: wrap; /* allow logo, button, nav to stack */
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: 15px;
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+        width: 100%;
+        margin: 10px 0 0;
+        padding: 15px 0;
+        display: none; /* hidden until toggle */
+        border-radius: 8px;
+    }
+
+    nav ul li {
+        text-align: center;
+    }
+
+    .mobile-menu-btn {
+        display: block; /* show hamburger */
+    }
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding: 0 20px;
+            }
+            
+            .contact-info li {
+                justify-content: center;
+            }
+            
+            .app-badges {
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .app-badge {
+                width: 200px;
+                justify-content: center;
+            }
+            
+            .footer-links li {
+                display: block;
+                margin-right: 0;
+            }
+            
+            .social-icons {
+                justify-content: center;
+            }
+            
+            .upper-header-content {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            #userMenu {
+                right: 50%;
+                transform: translateX(50%);
+            }
+            
+            .seat-grid {
+                grid-template-columns: repeat(5, 1fr);
+                max-width: 250px;
+            }
+            
+            .seat-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+            
+            .chat-input {
+                width: calc(100% - 90px);
+            }
+            .seat-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 10px;
+            }
+            
+            footer {
+                padding: 40px 0 20px;
+            }
+            
+            .footer-column h3 {
+                font-size: 1.5rem;
+            }
+            
+            .footer-column p {
+                font-size: 1rem;
+            }
+            
+            .contact-info li {
+                flex-direction: column;
+                text-align: center;
+                gap: 5px;
+            }
+            
+            .contact-info i {
+                margin-top: 0;
+            }
+            
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            .tracking-title {
+                font-size: 1.5rem;
+            }
+            
+            .chat-input {
+                width: 100%;
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+            
+            .send-btn {
+                width: 100%;
+            }
+            .seat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
         }
     </style>
-    <h2 class="text-xl font-semibold mb-4">Live Bus Tracking & Seat Availability</h2>
-    <div id="mainContent">
-        <div id="map"></div>
-    </div>
-    <div class="mt-6">
-        <h3 class="text-lg font-semibold mb-2">Seat Arrangement ({{ bus.total_seats }} seats)</h3>
-        <div id="seatGrid" class="grid gap-2" style="grid-template-columns: repeat(5, 40px); max-width: 220px;">
-            {% for seat, col in seat_grid_columns %}
-                {% if forloop.counter0|divisibleby:4 and forloop.counter0 < last_row_start %}
-                    <div style="grid-column: 1 / span 5; height: 5px;"></div>
-                {% endif %}
-                <button class="seat-btn {% if seat.is_available %}bg-green-400{% else %}bg-red-500{% endif %} text-white rounded w-10 h-10 focus:outline-none cursor-default" 
-                    data-seat-id="{{ seat.id }}" 
-                    style="grid-column: {{ col }};"
-                    disabled
-                    title="Seat {{ seat.seat_number }} - {% if seat.is_available %}Available{% else %}Occupied{% endif %}"
-                    >{{ seat.seat_number }}</button>
-            {% endfor %}
+</head>
+<body>
+    <!-- Upper Header -->
+    <div class="upper-header">
+        <div class="container">
+            <div class="upper-header-content">
+                <div class="welcome-message">
+                   <i class="fa-solid fa-hands-praying "></i> 
+                   <div class="welcome-text"><p>Welcome to Portal!</p></div>
+                </div>
+
+                <div>
+                    <p><i class="fa solid fa-phone"></i> 9820754740, 9820754741</p>
+                </div>
+            </div>
         </div>
-        <div class="text-sm text-gray-600 mt-2">Green = available, Red = occupied. (Read-only for passengers)</div>
     </div>
-    <div class="mt-6">
-        {% if user.is_authenticated %}
-            <button id="bookmarkBtn" class="bg-blue-500 text-white p-2 rounded">
-                {% if is_bookmarked %}Remove Bookmark{% else %}Bookmark this bus{% endif %}
-            </button>
-            <div class="mt-4">
-                <h4 class="font-semibold">Request Pickup</h4>
-                <textarea id="pickupStop" class="p-2 border rounded w-96" rows="2">{{ default_pickup }}</textarea>
-                <div class="mt-2">
-                    <input id="pickupMsg" placeholder="Optional message" class="p-2 border rounded w-64" />
-                    <button id="sendPickup" class="bg-green-500 text-white p-2 rounded ml-2">Send</button>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fa-solid fa-bus fa-2x"></i>
+                    <div class="logo-text">Local Route Bus Tracking System</div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="{% url 'homepage' %}">Home</a></li>
+                        <li><a href="#">Feature</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <!-- Login button replaced with account dropdown -->
+                        <li class="user-menu-container">
+                            <button id="userMenuBtn" class="flex items-center space-x-2">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Account</span>
+                            </button>
+                            <div id="userMenu" class="hidden">
+                                {% if request.user.is_authenticated %}
+                                    {% if not request.user.driver_profile %}
+                                        <a href="{% url 'user_profile' request.user.id %}">Profile</a>
+                                    {% endif %}
+                                    {% if request.user.driver_profile %}
+                                        <a href="{% url 'driver_dashboard' %}">Driver Dashboard</a>
+                                    {% endif %}
+                                    <a href="{% url 'logout' %}">Logout</a>
+                                {% else %}
+                                    <a href="{% url 'user_login' %}">User Login</a>
+                                    <a href="{% url 'user_register' %}">User Register</a>
+                                    <a href="{% url 'driver_login' %}">Driver Login</a>
+                                    <a href="{% url 'driver_register' %}">Driver Register</a>
+                                {% endif %}
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="tracking-container">
+                <h2 class="tracking-title">Live Bus Tracking & Seat Availability</h2>
+                
+                <div id="mapContainer">
+                    <div id="map"></div>
+                </div>
+                
+                <div class="seat-section">
+                    <h3>Seat Arrangement ({{ bus.total_seats }} seats)</h3>
+                    <div class="seat-grid">
+                        {% for seat, col in seat_grid_columns %}
+                            {% if forloop.counter0|divisibleby:4 and forloop.counter0 < last_row_start %}
+                                <div style="grid-column: 1 / span 5; height: 5px;"></div>
+                            {% endif %}
+                            <div class="seat-btn {% if seat.is_available %}available{% else %}occupied{% endif %}" 
+                                data-seat-id="{{ seat.id }}" 
+                                style="grid-column: {{ col }};"
+                                title="Seat {{ seat.seat_number }} - {% if seat.is_available %}Available{% else %}Occupied{% endif %}">
+                                {{ seat.seat_number }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <p class="status-message">Green = available, Red = occupied. (Read-only for passengers)</p>
+                </div>
+                
+                <div class="user-actions">
+                    {% if user.is_authenticated %}
+                        <button id="bookmarkBtn" class="action-btn bookmark">
+                            {% if is_bookmarked %}Remove Bookmark{% else %}Bookmark this bus{% endif %}
+                        </button>
+                        
+                        <div class="pickup-section">
+                            <h4>Request Pickup</h4>
+                            <textarea id="pickupStop" class="chat-input" rows="2">{{ default_pickup }}</textarea>
+                            <div style="margin-top: 10px;">
+                                <input id="pickupMsg" placeholder="Optional message" class="chat-input" style="width: 250px;" />
+                                <button id="sendPickup" class="send-btn">Send</button>
+                            </div>
+                        </div>
+
+                        <div class="chat-container">
+                            <h4>Chat with Driver</h4>
+                            <div id="chatLog" class="chat-log"></div>
+                            <div>
+                                <input id="chatInput" placeholder="Type message" class="chat-input" />
+                                <button id="sendChat" class="send-btn">Send</button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="status-message">Log in to bookmark, request pickup, or chat with driver.</p>
+                    {% endif %}
+                </div>
+                
+                {% comment %} <div id="locationStatus" class="status-message error"></div> {% endcomment %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Local Route Bus Tracking System<span class="Slogan">Ensure You a Safe Ride</span></h3>
+                    <p>Local Route Bus Tracking System Pvt. Ltd. is a GPS Tracking company, offering professional local bus tracking and fleet management solutions in Nepal.</p>
+                    <p>We help passengers and drivers track buses in real time using GPS. It shows live bus locations, estimated arrival times, and route information, making travel more convenient and efficient.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <ul class="footer-links">
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms and Conditions</a></li>
+                    </ul>
+                    
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-phone-alt"></i>
+                            <span>Customer Care: 9800754740, 9800754741</span>
+                        </li>
+                        <li>
+                            <i class="fab fa-whatsapp"></i>
+                            <span>Connect on Whatsapp: 9800754740</span>
+                        </li>
+                        <li>
+                            <i class="far fa-clock"></i>
+                            <span>Working hours: 4:00 am - 9:00 pm</span>
+                        </li>
+                        <li>
+                            <i class="far fa-envelope"></i>
+                            <span>Email us at: localroutebustracking@gmail.com</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Download Our App</h3>
+                    <p>Get access to your tracking data on the go with our mobile app</p>
+                    <div class="app-badges">
+                        <a href="#" class="app-badge"><i class="fab fa-google-play"></i> Google Play</a>
+                        <a href="#" class="app-badge"><i class="fab fa-apple"></i> App Store</a>
+                    </div>
                 </div>
             </div>
-
-            <!-- Toast container -->
-            <div id="toastContainer" style="position:fixed; top:20px; right:20px; z-index:9999;"></div>
-
-            <div id="chatContainer" class="mt-6 border p-2" style="max-width:600px;">
-                <h4 class="font-semibold">Chat with Driver</h4>
-                <div id="chatLog" style="height:200px; overflow:auto; border:1px solid #ddd; padding:8px; background:#fafafa;"></div>
-                <div class="mt-2">
-                    <input id="chatInput" placeholder="Type message" class="p-2 border rounded w-3/4" />
-                    <button id="sendChat" class="bg-blue-600 text-white p-2 rounded">Send</button>
-                </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025, Local Route Bus Tracking Pvt. Ltd. All rights reserved.</p>
             </div>
-        {% else %}
-            <div class="text-sm text-gray-600">Log in to bookmark, request pickup, or chat with driver.</div>
-        {% endif %}
-    </div>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        </div>
+    </footer>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+        // Initialize map
         const busId = "{{ bus_id }}";
-        const socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/location/' + busId + '/');
-        let map = L.map('map').setView([27.7172, 85.3240], 13); // Default to Kathmandu
+        let map = L.map('map'); // no setView yet
+        if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        function (pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            map.setView([lat, lng], 13);
+            if (!marker) {
+                marker = L.marker([lat, lng]).addTo(map)
+                    .bindPopup("You are here").openPopup();
+            }
+        },
+        function () {
+            // If denied or failed → Kathmandu default
+            map.setView([27.7172, 85.3240], 13);
+        }
+    );
+} else {
+    // Browser doesn’t support geolocation
+    map.setView([27.7172, 85.3240], 13);
+}
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
         }).addTo(map);
+        
         let marker = null;
         let locationReceived = false;
+        
+        // WebSocket for real-time location updates
+        const socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/location/' + busId + '/');
+        
         socket.onmessage = function(event){
             const data = JSON.parse(event.data);
             if (data.lat && data.lng) {
@@ -91,122 +921,169 @@
                 }
                 map.setView([data.lat, data.lng], 15);
                 document.getElementById('locationStatus').innerText = "Bus location updated.";
+                document.getElementById('locationStatus').className = "status-message success";
             }
         };
-        setTimeout(function(){
-            if (!locationReceived) {
-                document.getElementById('locationStatus').innerText = "";
-                if (!marker) {
-                    marker = L.marker([27.7172, 85.3240]).addTo(map);
-                }
-            }
-        }, 10000);
-    </script>
-    <script>
-    // Bookmark logic
-    {% if user.is_authenticated %}
-    const bookmarkBtn = document.getElementById('bookmarkBtn');
-    bookmarkBtn && bookmarkBtn.addEventListener('click', function(){
-        const url = '{{ is_bookmarked|yesno:"/api/remove_bookmark/,/api/bookmark_bus/" }}';
-        fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}'},
-            body: 'bus_id=' + encodeURIComponent(busId)
-        }).then(r => r.json()).then(data => {
-            if (data.status === 'success') {
-                if (bookmarkBtn.innerText.includes('Remove')) {
-                    bookmarkBtn.innerText = 'Bookmark this bus';
-                } else {
-                    bookmarkBtn.innerText = 'Remove Bookmark';
-                }
-            }
-        });
-    });
-
-    // Pickup request via AJAX with validation and toasts
-    function showToast(message, type){
-        const el = document.createElement('div');
-        el.innerText = message;
-        el.style.padding = '10px 14px';
-        el.style.borderRadius = '6px';
-        el.style.marginTop = '8px';
-        el.style.color = '#fff';
-        el.style.minWidth = '180px';
-        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-        if (type === 'success') el.style.background = '#16a34a'; else if (type === 'error') el.style.background = '#dc2626'; else el.style.background = '#374151';
-        const container = document.getElementById('toastContainer');
-        container.appendChild(el);
-        setTimeout(()=>{ el.style.opacity = '0'; setTimeout(()=>el.remove(),400); }, 3000);
-    }
-
-    document.getElementById('sendPickup').addEventListener('click', function(){
-        const stop = document.getElementById('pickupStop').value.trim();
-        const message = document.getElementById('pickupMsg').value.trim();
-        if (!stop) { showToast('Please enter a pickup location.', 'error'); return; }
-        const btn = this;
-        btn.disabled = true;
-        fetch('/api/send_pickup/', {
-            method: 'POST',
-            headers: {'Content-Type':'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}'},
-            body: 'bus_id=' + encodeURIComponent(busId) + '&stop=' + encodeURIComponent(stop) + '&message=' + encodeURIComponent(message)
-        }).then(r => r.json()).then(data => {
-            if (data.status === 'success') {
-                showToast('Pickup request sent.', 'success');
-            } else {
-                showToast('Error: ' + (data.error || 'failed'), 'error');
-            }
-        }).catch(err=>{ showToast('Network error', 'error'); }).finally(()=>{ btn.disabled = false; });
-    });
-
-    // Chat websocket
-    const chatLog = document.getElementById('chatLog');
-    const chatInput = document.getElementById('chatInput');
-    const sendChat = document.getElementById('sendChat');
-    const chatRoom = "{{ chat_room }}";
-    let chatSocket = null;
-    if (chatRoom) {
-        chatSocket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + chatRoom + '/');
-        chatSocket.onopen = function(){ console.log('User chat socket opened:', chatRoom); };
-        chatSocket.onmessage = function(e){
-            console.log('User WS raw message:', e.data);
-            let d = null;
-            try { d = JSON.parse(e.data); } catch(err){ console.error('User WS parse error', err); return; }
-            if (d.type === 'chat_message') {
-                const el = document.createElement('div');
-                const isMe = (d.sender_id === {{ request.user.id }});
-                let senderLabel = 'Driver';
-                if (isMe) {
-                    senderLabel = 'You';
-                } else if (d.sender_name) {
-                    senderLabel = d.sender_name + ' (driver)';
-                }
-                el.innerText = (senderLabel + ': ') + d.content;
-                chatLog.appendChild(el);
-                chatLog.appendChild(el);
-                console.log('Appended to user chatLog:', el.innerText);
-                chatLog.scrollTop = chatLog.scrollHeight;
-            } else if (d.type === 'pickup_notification') {
-                // Ignore - pickup notifications go to driver
-            }
+        
+        // If no location received after 10 seconds, show default
+      setTimeout(function(){
+    if (!locationReceived) {
+        document.getElementById('locationStatus').innerText = "Using your location (or default) — no bus updates.";
+        if (!marker) {
+            marker = L.marker(map.getCenter()).addTo(map);
         }
     }
+}, 10000);
+        
+        // User menu functionality
+        document.getElementById('userMenuBtn').addEventListener('click', function(e){
+            e.stopPropagation();
+            const menu = document.getElementById('userMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        });
+        
+        window.addEventListener('click', function(e){
+            const btn = document.getElementById('userMenuBtn');
+            const menu = document.getElementById('userMenu');
+            if (!btn.contains(e.target) && menu && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
 
-    // debug area for last incoming raw frame
-    const lastIncomingUser = document.createElement('div');
-    lastIncomingUser.id = 'lastIncomingUserRaw';
-    lastIncomingUser.style.fontSize = '12px';
-    lastIncomingUser.style.color = '#555';
-    lastIncomingUser.style.marginTop = '6px';
-    chatLog.parentNode.insertBefore(lastIncomingUser, chatLog.nextSibling);
+        // Mobile menu toggle functionality
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            const nav = document.querySelector('nav ul');
+            nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
+        });
 
-    sendChat && sendChat.addEventListener('click', function(){
-        const content = chatInput.value.trim();
-        if (!content || !chatSocket) return;
-        const payload = {type: 'chat_message', content: content, recipient_id: {% if bus and bus.driver and bus.driver.user %}{{ bus.driver.user.id }}{% else %}null{% endif %}, bus_id: busId};
-        chatSocket.send(JSON.stringify(payload));
-        chatInput.value = '';
-    });
-    {% endif %}
+        // Responsive menu adjustment
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.querySelector('nav ul').style.display = 'flex';
+            } else {
+                document.querySelector('nav ul').style.display = 'none';
+            }
+        });
+
+        // Bookmark logic
+        {% if user.is_authenticated %}
+        const bookmarkBtn = document.getElementById('bookmarkBtn');
+        bookmarkBtn && bookmarkBtn.addEventListener('click', function(){
+            const url = '{{ is_bookmarked|yesno:"/api/remove_bookmark/,/api/bookmark_bus/" }}';
+            fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}'},
+                body: 'bus_id=' + encodeURIComponent(busId)
+            }).then(r => r.json()).then(data => {
+                if (data.status === 'success') {
+                    if (bookmarkBtn.innerText.includes('Remove')) {
+                        bookmarkBtn.innerText = 'Bookmark this bus';
+                        showToast('Bookmark removed', 'success');
+                    } else {
+                        bookmarkBtn.innerText = 'Remove Bookmark';
+                        showToast('Bus bookmarked', 'success');
+                    }
+                }
+            }).catch(err => {
+                showToast('Error updating bookmark', 'error');
+            });
+        });
+
+        // Toast function
+        function showToast(message, type){
+            const el = document.createElement('div');
+            el.className = `toast toast-${type}`;
+            el.innerText = message;
+            const container = document.getElementById('toastContainer');
+            container.appendChild(el);
+            setTimeout(() => { 
+                el.style.opacity = '0'; 
+                setTimeout(() => el.remove(), 400); 
+            }, 3000);
+        }
+
+        // Pickup request via AJAX with validation and toasts
+        document.getElementById('sendPickup').addEventListener('click', function(){
+            const stop = document.getElementById('pickupStop').value.trim();
+            const message = document.getElementById('pickupMsg').value.trim();
+            if (!stop) { 
+                showToast('Please enter a pickup location.', 'error'); 
+                return; 
+            }
+            const btn = this;
+            btn.disabled = true;
+            fetch('/api/send_pickup/', {
+                method: 'POST',
+                headers: {'Content-Type':'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}'},
+                body: 'bus_id=' + encodeURIComponent(busId) + '&stop=' + encodeURIComponent(stop) + '&message=' + encodeURIComponent(message)
+            }).then(r => r.json()).then(data => {
+                if (data.status === 'success') {
+                    showToast('Pickup request sent.', 'success');
+                } else {
+                    showToast('Error: ' + (data.error || 'failed'), 'error');
+                }
+            }).catch(err => { 
+                showToast('Network error', 'error'); 
+            }).finally(() => { 
+                btn.disabled = false; 
+            });
+        });
+
+        // Chat websocket
+        const chatLog = document.getElementById('chatLog');
+        const chatInput = document.getElementById('chatInput');
+        const sendChat = document.getElementById('sendChat');
+        const chatRoom = "{{ chat_room }}";
+        let chatSocket = null;
+        
+        if (chatRoom) {
+            chatSocket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/chat/' + chatRoom + '/');
+            
+            chatSocket.onopen = function(){ 
+                console.log('User chat socket opened:', chatRoom); 
+            };
+            
+            chatSocket.onmessage = function(e){
+                console.log('User WS raw message:', e.data);
+                let d = null;
+                try { 
+                    d = JSON.parse(e.data); 
+                } catch(err){ 
+                    console.error('User WS parse error', err); 
+                    return; 
+                }
+                
+                if (d.type === 'chat_message') {
+                    const el = document.createElement('div');
+                    const isMe = (d.sender_id === {{ request.user.id }});
+                    let senderLabel = 'Driver';
+                    if (isMe) {
+                        senderLabel = 'You';
+                    } else if (d.sender_name) {
+                        senderLabel = d.sender_name + ' (driver)';
+                    }
+                    el.innerText = (senderLabel + ': ') + d.content;
+                    chatLog.appendChild(el);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                } else if (d.type === 'pickup_notification') {
+                    // Ignore - pickup notifications go to driver
+                }
+            };
+        }
+
+        sendChat && sendChat.addEventListener('click', function(){
+            const content = chatInput.value.trim();
+            if (!content || !chatSocket) return;
+            const payload = {
+                type: 'chat_message', 
+                content: content, 
+                recipient_id: {% if bus and bus.driver and bus.driver.user %}{{ bus.driver.user.id }}{% else %}null{% endif %}, 
+                bus_id: busId
+            };
+            chatSocket.send(JSON.stringify(payload));
+            chatInput.value = '';
+        });
+        {% endif %}
     </script>
-    <div id="locationStatus" class="mt-2 text-red-500 font-semibold"></div>
-{% endblock %}
+</body>
+</html>

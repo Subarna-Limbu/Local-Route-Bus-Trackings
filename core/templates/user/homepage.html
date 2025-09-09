@@ -1,45 +1,905 @@
-{% extends 'base.html' %}
-{% block content %}
-    <h2 class="text-xl font-semibold mb-4">Find Your Bus</h2>
-    <form method="get" class="mb-4">
-        <label class="block mb-2">
-            Pickup Point:
-            <select name="pickup" class="p-2 border rounded">
-                <option value="">Select Pickup</option>
-                {% for stop in stops %}
-                    <option value="{{ stop }}" {% if pickup == stop %} selected {% endif %}>{{ stop }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label class="block mb-2">
-            Destination Point:
-            <select name="destination" class="p-2 border rounded">
-                <option value="">Select Destination</option>
-                {% for stop in stops %}
-                    <option value="{{ stop }}" {% if destination == stop %} selected {% endif %}>{{ stop }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <button type="submit" class="bg-blue-500 text-white p-2 rounded">Search Buses</button>
-    </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #1a56db;
+            --secondary: #0f2e72;
+            --accent: #ff6b35;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+        }
+
+        body {
+            background-color: #f9fafb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Upper Header Styles */
+        .upper-header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+         .welcome-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .welcome-message img {
+            height: 40px;
+        }
+
+        .welcome-text {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .welcome-text span {
+            color: var(--accent);
+        }
+
+        .upper-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upper-header p {
+            margin: 0;
+        }
+
+        .upper-header i {
+            margin-right: 5px;
+            color: var(--accent);
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 40px;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-text span {
+            color: var(--accent);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 1.1rem;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* User menu styles */
+        .user-menu-container {
+            position: relative;
+        }
+
+        #userMenuBtn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.3s;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        #userMenuBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #userMenu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 8px;
+            width: 200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            z-index: 1000;
+            display: none;
+        }
+
+        #userMenu a {
+            display: block;
+            padding: 12px 16px;
+            color: var(--dark);
+            text-decoration: none;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        #userMenu a:hover {
+            background: #f3f4f6;
+        }
+
+        #userMenu a:last-child {
+            border-bottom: none;
+        }
+
+        /* Bus Tracking Section */
+        .bus-tracking {
+            padding: 80px 0;
+            background: url("/media/backgrounds/kathmandu-valley.jpg") center/cover;
+            color: white;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(19, 15, 15, 0.1);
+        }
+        .bus-tracking::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+      
+        .bus-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .bus-text h2 {
+            font-size: 2.8rem;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .bus-text h2 span {
+            display: block;
+        }
+
+        .bus-text p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            max-width: 500px;
+        }
+
+        .bus-form {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-title {
+            color: var(--secondary);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .form-button {
+            display: block;
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .form-button:hover {
+            background-color: #d86e6e;
+        }
+
+        /* Results Section */
+        .results-section {
+            padding: 40px 0;
+        }
+
+        .results-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .results-title {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .bus-list {
+            list-style: none;
+        }
+
+        .bus-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .bus-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .bus-route {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .bus-details {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .bus-details span {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .track-link {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .track-link:hover {
+            background-color: var(--secondary);
+        }
+
+        /* Footer Styles */
+        footer {
+            background: linear-gradient(135deg, #0f2e72 0%, #1a56db 100%);
+            color: white;
+            padding: 60px 0 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+            padding: 0 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ff6b35;
+            font-weight: 700;
+        }
+
+        .footer-column h3 span {
+            display: block;
+            font-size: 1.2rem;
+            color: #fff;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+        .footer-column h3 .Slogan{
+            font-size: 1.3rem;
+            color: #ff6b35;
+            margin-top: 5px;
+            font-weight: 700;
+            font-family : 'Segoe UI', sans-serif;
+        }
+        .footer-column p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .footer-links {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .footer-links a {
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            color: #ff6b35;
+        }
+
+        .contact-info {
+            list-style: none;
+        }
+
+        .contact-info li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .contact-info i {
+            color: #ff6b35;
+            margin-top: 4px;
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        .app-badges {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .app-badge {
+            display: inline-flex;
+            align-items: center;
+            background: white;
+            color: #1a56db;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-badge i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #9ca3af;
+            padding: 30px 40px 0;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: #ff6b35;
+            transform: translateY(-3px);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .bus-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+             .header-content {
+        flex-wrap: wrap; /* allow logo, button, nav to stack */
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: 15px;
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+        width: 100%;
+        margin: 10px 0 0;
+        padding: 15px 0;
+        display: none; /* hidden until toggle */
+        border-radius: 8px;
+    }
+
+    nav ul li {
+        text-align: center;
+    }
+
+    .mobile-menu-btn {
+        display: block; /* show hamburger */
+    }
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding: 0 20px;
+            }
+            
+            .contact-info li {
+                justify-content: center;
+            }
+            
+            .app-badges {
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .app-badge {
+                width: 200px;
+                justify-content: center;
+            }
+            
+            .footer-links li {
+                display: block;
+                margin-right: 0;
+            }
+            
+            .social-icons {
+                justify-content: center;
+            }
+            
+            .upper-header-content {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .bus-text h2 {
+                font-size: 2.2rem;
+            }
+            
+            .bus-text p {
+                font-size: 1.1rem;
+            }
+            
+            #userMenu {
+                right: 50%;
+                transform: translateX(50%);
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 10px;
+            }
+            
+            footer {
+                padding: 40px 0 20px;
+            }
+            
+            .footer-column h3 {
+                font-size: 1.5rem;
+            }
+            
+            .footer-column p {
+                font-size: 1rem;
+            }
+            
+            .contact-info li {
+                flex-direction: column;
+                text-align: center;
+                gap: 5px;
+            }
+            
+            .contact-info i {
+                margin-top: 0;
+            }
+            
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            .bus-tracking {
+                padding: 60px 0;
+            }
+            
+            .bus-text h2 {
+                font-size: 1.8rem;
+            }
+            
+            .results-title {
+                font-size: 1.5rem;
+            }
+            
+            .bus-route {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Upper Header -->
+    <div class="upper-header">
+        <div class="container">
+            <div class="upper-header-content">
+                <div class="welcome-message">
+                   <i class="fa-solid fa-hands-praying "></i> 
+                   <div class="welcome-text"><p>Welcome to Portal!</p></div>
+                </div>
+
+                <div>
+                    <p><i class="fa solid fa-phone"></i> 9820754740, 9820754741</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fa-solid fa-bus fa-2x"></i>
+                    <div class="logo-text">Local Route Bus Tracking System</div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="{% url 'homepage' %}">Home</a></li>
+                        <li><a href="#">Feature</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <!-- Login button replaced with account dropdown -->
+                        <li class="user-menu-container">
+                            <button id="userMenuBtn" class="flex items-center space-x-2">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Account</span>
+                            </button>
+                            <div id="userMenu" class="hidden">
+                                {% if request.user.is_authenticated %}
+                                    {% if not request.user.driver_profile %}
+                                        <a href="{% url 'user_profile' request.user.id %}">Profile</a>
+                                    {% endif %}
+                                    {% if request.user.driver_profile %}
+                                        <a href="{% url 'driver_dashboard' %}">Driver Dashboard</a>
+                                    {% endif %}
+                                    <a href="{% url 'logout' %}">Logout</a>
+                                {% else %}
+                                    <a href="{% url 'user_login' %}">User Login</a>
+                                    <a href="{% url 'user_register' %}">User Register</a>
+                                    <a href="{% url 'driver_login' %}">Driver Login</a>
+                                    <a href="{% url 'driver_register' %}">Driver Register</a>
+                                {% endif %}
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Bus Tracking Section -->
+    <section class="bus-tracking">
+        <div class="container">
+            <div class="bus-content">
+                <div class="bus-text">
+                    <h2>Real-Time Bus <span>Tracking in Nepal</span></h2>
+                    <p>Your reliable partner for safe and efficient travel.</p>
+                </div>
+                <div class="bus-form">
+                    <h3 class="form-title">Search Buses</h3>
+                    <form method="get">
+                        <div class="form-group">
+                            <label for="pickup">Pickup Point:</label>
+                            <select id="pickup" name="pickup" class="p-2 border rounded">
+                                <option value="">Select Pickup</option>
+                                {% for stop in stops %}
+                                    <option value="{{ stop }}" {% if pickup == stop %} selected {% endif %}>{{ stop }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="destination">Destination Point:</label>
+                            <select id="destination" name="destination" class="p-2 border rounded">
+                                <option value="">Select Destination</option>
+                                {% for stop in stops %}
+                                    <option value="{{ stop }}" {% if destination == stop %} selected {% endif %}>{{ stop }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="form-button">Search Buses</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
     {% if buses_info %}
-        <h3 class="text-lg font-semibold mb-2">Available Buses</h3>
-        <ul>
-            {% for info in buses_info %}
-                <li class="mb-2 p-2 bg-white shadow rounded">
-                    <strong>{{ info.route.name }}</strong> (Bus: {{ info.bus.number_plate }})<br>
-                    <span>ETA to pickup: {{ info.eta }} min</span><br>
-                    <span>Available Seats: {{ info.available_seats }} / {{ info.bus.total_seats }}</span><br>
-                    <a href="#" onclick="startTracking('{{ info.bus.id }}')" class="text-blue-500 hover:underline">Track & View Seats</a>
-                </li>
-            {% endfor %}
-        </ul>
-        <!-- Map placeholder -->
+    <section class="results-section">
+        <div class="container">
+            <div class="results-container">
+                <h3 class="results-title">Available Buses</h3>
+                <ul class="bus-list">
+                    {% for info in buses_info %}
+                        <li class="bus-item">
+                            <div class="bus-route">{{ info.route.name }}</div>
+                            <div class="bus-details">
+                                <span><strong>Bus:</strong> {{ info.bus.number_plate }}</span>
+                                <span><strong>ETA to pickup:</strong> {{ info.eta }} min</span>
+                                <span><strong>Available Seats:</strong> {{ info.available_seats }} / {{ info.bus.total_seats }}</span>
+                            </div>
+                            <a href="#" onclick="startTracking('{{ info.bus.id }}')" class="track-link">Track & View Seats</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </section>
     {% endif %}
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Local Route Bus Tracking System<span class="Slogan">Ensure You a Safe Ride</span></h3>
+                    <p>Local Route Bus Tracking System Pvt. Ltd. is a GPS Tracking company, offering professional local bus tracking and fleet management solutions in Nepal.</p>
+                    <p>We help passengers and drivers track buses in real time using GPS. It shows live bus locations, estimated arrival times, and route information, making travel more convenient and efficient.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <ul class="footer-links">
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms and Conditions</a></li>
+                    </ul>
+                    
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-phone-alt"></i>
+                            <span>Customer Care: 9800754740, 9800754741</span>
+                        </li>
+                        <li>
+                            <i class="fab fa-whatsapp"></i>
+                            <span>Connect on Whatsapp: 9800754740</span>
+                        </li>
+                        <li>
+                            <i class="far fa-clock"></i>
+                            <span>Working hours: 4:00 am - 9:00 pm</span>
+                        </li>
+                        <li>
+                            <i class="far fa-envelope"></i>
+                            <span>Email us at: localroutebustracking@gmail.com</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Download Our App</h3>
+                    <p>Get access to your tracking data on the go with our mobile app</p>
+                    <div class="app-badges">
+                        <a href="#" class="app-badge"><i class="fab fa-google-play"></i> Google Play</a>
+                        <a href="#" class="app-badge"><i class="fab fa-apple"></i> App Store</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025, Local Route Bus Tracking Pvt. Ltd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
     <script>
-        function startTracking(busId){
-            // Redirect to the bus tracking page.
+        // User menu functionality
+        document.getElementById('userMenuBtn').addEventListener('click', function(e){
+            e.stopPropagation();
+            const menu = document.getElementById('userMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        });
+        
+        window.addEventListener('click', function(e){
+            const btn = document.getElementById('userMenuBtn');
+            const menu = document.getElementById('userMenu');
+            if (!btn.contains(e.target) && menu && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Mobile menu toggle functionality
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            const nav = document.querySelector('nav ul');
+            nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        // Responsive menu adjustment
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.querySelector('nav ul').style.display = 'flex';
+            } else {
+                document.querySelector('nav ul').style.display = 'none';
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Function to redirect to the bus tracking page
+        function startTracking(busId) {
             window.location.href = '/track/' + busId + '/';
         }
     </script>
-{% endblock %}
+</body>
+</html>

@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=D:\SubjectsNote\Project work\smart_transport\venv
+set VIRTUAL_ENV=C:\Users\KaranPrerna\Downloads\smart_transport (2)\smart_transport\venv
 
 if not defined PROMPT set PROMPT=$P$G
 

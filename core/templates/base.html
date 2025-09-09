@@ -2,101 +2,599 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Local Transportation System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Local Transportation System{% endblock %}</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% block extra_head %}{% endblock %}
+    <style>
+        :root {
+            --primary: #1a56db;
+            --secondary: #0f2e72;
+            --accent: #ff6b35;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+        }
+
+        /* Upper Header Styles */
+        .upper-header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .welcome-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .welcome-text {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .welcome-text span {
+            color: var(--accent);
+        }
+
+        .upper-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upper-header p {
+            margin: 0;
+        }
+
+        .upper-header i {
+            margin-right: 5px;
+            color: var(--accent);
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo-text span {
+            color: var(--accent);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 1.1rem;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* User menu styles */
+        .user-menu-container {
+            position: relative;
+        }
+
+        #userMenuBtn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        #userMenuBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #userMenu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 8px;
+            width: 200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            z-index: 1000;
+            display: none;
+        }
+
+        #userMenu a {
+            display: block;
+            padding: 12px 16px;
+            color: var(--dark);
+            text-decoration: none;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        #userMenu a:hover {
+            background: #f3f4f6;
+        }
+
+        #userMenu a:last-child {
+            border-bottom: none;
+        }
+
+        /* Footer Styles */
+        footer {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 60px 0 30px;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .footer-column h3 span {
+            display: block;
+            font-size: 1.2rem;
+            color: #fff;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+        
+        .footer-column h3 .Slogan {
+            font-size: 1.3rem;
+            color: var(--accent);
+            margin-top: 5px;
+            font-weight: 700;
+        }
+        
+        .footer-column p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .footer-links {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .contact-info {
+            list-style: none;
+        }
+
+        .contact-info li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .contact-info i {
+            color: var(--accent);
+            margin-top: 4px;
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        .app-badges {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .app-badge {
+            display: inline-flex;
+            align-items: center;
+            background: white;
+            color: var(--primary);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-badge i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: var(--accent);
+            transform: translateY(-3px);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .upper-header-content {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            nav ul {
+                display: none;
+            }
+             .header-content {
+        flex-wrap: wrap; /* allow logo, button, nav to stack */
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: 15px;
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+        width: 100%;
+        margin: 10px 0 0;
+        padding: 15px 0;
+        display: none; /* hidden until toggle */
+        border-radius: 8px;
+    }
+
+    nav ul li {
+        text-align: center;
+    }
+
+    .mobile-menu-btn {
+        display: block; /* show hamburger */
+    }
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .contact-info li {
+                justify-content: center;
+            }
+            
+            .app-badges {
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .app-badge {
+                width: 200px;
+                justify-content: center;
+            }
+            
+            .footer-links li {
+                display: block;
+                margin-right: 0;
+            }
+            
+            .social-icons {
+                justify-content: center;
+            }
+            
+            #userMenu {
+                right: 50%;
+                transform: translateX(50%);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-column h3 {
+                font-size: 1.5rem;
+            }
+            
+            .footer-column p {
+                font-size: 1rem;
+            }
+            
+            .contact-info li {
+                flex-direction: column;
+                text-align: center;
+                gap: 5px;
+            }
+            
+            .contact-info i {
+                margin-top: 0;
+            }
+            
+            .logo-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100 flex flex-col min-h-screen">
-    <header class="bg-gradient-to-r from-indigo-600 via-sky-600 to-teal-500 text-white p-4 shadow-md">
-        <div class="container mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <a href="{% url 'homepage' %}" class="flex items-center space-x-3">
-                    <div class="bg-white text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center font-bold">ST</div>
-                    <div>
-                        <h1 class="text-xl font-semibold">Smart Transport</h1>
-                        <p class="text-sm opacity-90">Real-time bus tracking</p>
-                    </div>
-                </a>
-            </div>
-            <div class="flex items-center space-x-4">
-                <nav class="hidden md:flex space-x-4">
-                    <a href="{% url 'homepage' %}" class="hover:underline">Home</a>
-                    <a href="{% url 'driver_login' %}" class="hover:underline">Driver Login</a>
-                    <a href="{% url 'driver_register' %}" class="hover:underline">Driver Register</a>
-                </nav>
+    <!-- Upper Header -->
+    <div class="upper-header">
+        <div class="container mx-auto px-4">
+            <div class="upper-header-content">
+                <div class="welcome-message">
+                   <i class="fa-solid fa-hands-praying"></i> 
+                   <div class="welcome-text"><p>Welcome to Portal!</p></div>
+                </div>
 
+                <div>
+                    <p><i class="fa solid fa-phone"></i> 9820754740, 9820754741</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="container mx-auto px-4">
+            <div class="header-content" style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                <div class="logo">
+                    <i class="fa-solid fa-bus fa-2x"></i>
+                    <div class="logo-text">Local Route Bus Tracking System</div>
+                </div>
+                  <div style="display: flex; align-items: center; gap: 25px;">
+                <nav>
+                     <ul style="display: flex; gap: 25px; align-items: center; margin: 0; padding: 0;">
+                        <li><a href="{% url 'homepage' %}">Home</a></li>
+                        <li><a href="#">Feature</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </nav>
+                
                 <!-- User menu -->
-                <div class="relative">
-                    <button id="userMenuBtn" class="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-md focus:outline-none">
+                <div class="user-menu-container">
+                    <button id="userMenuBtn" class="flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.761 0 5.303.9 7.379 2.439M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <span class="hidden sm:inline">Account</span>
                     </button>
-                    <div id="userMenu" class="hidden absolute right-0 mt-2 w-56 bg-white text-gray-800 rounded-md shadow-lg overflow-hidden z-50">
+                    <div id="userMenu" class="hidden">
                         {% if request.user.is_authenticated %}
                             {% if not request.user.driver_profile %}
-                                <a href="{% url 'user_profile' request.user.id %}" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
+                                <a href="{% url 'user_profile' request.user.id %}">Profile</a>
                             {% endif %}
                             {% if request.user.driver_profile %}
-                                <a href="{% url 'driver_dashboard' %}" class="block px-4 py-2 hover:bg-gray-100">Driver Dashboard</a>
+                                <a href="{% url 'driver_dashboard' %}">Driver Dashboard</a>
                             {% endif %}
-                            <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+                            <a href="{% url 'logout' %}">Logout</a>
                         {% else %}
-                            <a href="{% url 'user_login' %}" class="block px-4 py-2 hover:bg-gray-100">User Login</a>
-                            <a href="{% url 'user_register' %}" class="block px-4 py-2 hover:bg-gray-100">User Register</a>
-                            <div class="border-t"></div>
-                            <a href="{% url 'driver_login' %}" class="block px-4 py-2 hover:bg-gray-100">Driver Login</a>
-                            <a href="{% url 'driver_register' %}" class="block px-4 py-2 hover:bg-gray-100">Driver Register</a>
+                            <a href="{% url 'user_login' %}">User Login</a>
+                            <a href="{% url 'user_register' %}">User Register</a>
+                            <a href="{% url 'driver_login' %}">Driver Login</a>
+                            <a href="{% url 'driver_register' %}">Driver Register</a>
                         {% endif %}
                     </div>
                 </div>
             </div>
+                
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
     </header>
+
     <!-- Main content -->
-    <main class="flex-grow p-4">
+    <main class="flex-grow p-4 container mx-auto">
         {% if messages %}
             {% for message in messages %}
-                <div class="bg-green-100 p-2 mb-2">{{ message }}</div>
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">{{ message }}</div>
             {% endfor %}
         {% endif %}
         {% block content %}{% endblock %}
     </main>
-    <footer class="bg-white border-t mt-8">
-        <div class="container mx-auto py-8 grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
-            <div>
-                <h5 class="font-semibold">Smart Transport</h5>
-                <p class="text-sm text-gray-600">Real-time bus tracking with clean UI and instant notifications.</p>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container mx-auto px-4">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Local Route Bus Tracking System<span class="Slogan">Ensure You a Safe Ride</span></h3>
+                    <p>Local Route Bus Tracking System Pvt. Ltd. is a GPS Tracking company, offering professional local bus tracking and fleet management solutions in Nepal.</p>
+                    <p>We help passengers and drivers track buses in real time using GPS. It shows live bus locations, estimated arrival times, and route information, making travel more convenient and efficient.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <ul class="footer-links">
+                        <li><a href="{% url 'homepage' %}">Home</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms and Conditions</a></li>
+                    </ul>
+                    
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <ul class="contact-info">
+                        <li>
+                            <i class="fas fa-phone-alt"></i>
+                            <span>Customer Care: 9800754740, 9800754741</span>
+                        </li>
+                        <li>
+                            <i class="fab fa-whatsapp"></i>
+                            <span>Connect on Whatsapp: 9800754740</span>
+                        </li>
+                        <li>
+                            <i class="far fa-clock"></i>
+                            <span>Working hours: 4:00 am - 9:00 pm</span>
+                        </li>
+                        <li>
+                            <i class="far fa-envelope"></i>
+                            <span>Email us at: localroutebustracking@gmail.com</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Download Our App</h3>
+                    <p>Get access to your tracking data on the go with our mobile app</p>
+                    <div class="app-badges">
+                        <a href="#" class="app-badge"><i class="fab fa-google-play"></i> Google Play</a>
+                        <a href="#" class="app-badge"><i class="fab fa-apple"></i> App Store</a>
+                    </div>
+                </div>
             </div>
-            <div>
-                <h5 class="font-semibold">Links</h5>
-                <ul class="text-sm text-gray-600">
-                    <li><a href="{% url 'homepage' %}" class="hover:underline">Home</a></li>
-                    <li><a href="{% url 'driver_login' %}" class="hover:underline">Driver Login</a></li>
-                    <li><a href="{% url 'driver_register' %}" class="hover:underline">Driver Register</a></li>
-                </ul>
-            </div>
-            <div>
-                <h5 class="font-semibold">Contact</h5>
-                <p class="text-sm text-gray-600">support@smarttransport.local</p>
+            
+            <div class="copyright">
+                <p>&copy; 2025, Local Route Bus Tracking Pvt. Ltd. All rights reserved.</p>
             </div>
         </div>
-        <div class="bg-gray-50 text-center py-3 text-sm text-gray-500">&copy; 2025 Smart Transport</div>
     </footer>
 
     <script>
-        document.getElementById('userMenuBtn').addEventListener('click', function(){
-            const m = document.getElementById('userMenu');
-            if (m.style.display === 'block') m.style.display = 'none'; else m.style.display = 'block';
+        // User menu functionality
+        document.getElementById('userMenuBtn').addEventListener('click', function(e){
+            e.stopPropagation();
+            const menu = document.getElementById('userMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         });
+        
         window.addEventListener('click', function(e){
             const btn = document.getElementById('userMenuBtn');
             const menu = document.getElementById('userMenu');
-            if (!btn.contains(e.target) && menu && !menu.contains(e.target)) menu.style.display = 'none';
+            if (!btn.contains(e.target) && menu && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Mobile menu toggle functionality
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            const nav = document.querySelector('nav ul');
+            nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        // Responsive menu adjustment
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.querySelector('nav ul').style.display = 'flex';
+            } else {
+                document.querySelector('nav ul').style.display = 'none';
+            }
         });
     </script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>
