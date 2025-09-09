@@ -201,7 +201,7 @@
             background: url("/media/backgrounds/kathmandu-valley.jpg") center/cover;
             color: white;
             position: relative;
-            border-radius: 12px;
+            border-radius: 0px;
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(19, 15, 15, 0.1);
         }
@@ -376,7 +376,7 @@
             background: linear-gradient(135deg, #0f2e72 0%, #1a56db 100%);
             color: white;
             padding: 60px 0 30px;
-            border-radius: 12px;
+            border-radius: 0px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
@@ -726,7 +726,8 @@
     </header>
 
     <!-- Bus Tracking Section -->
-    <section class="bus-tracking">
+     {% load static %}
+    <section class="bus-tracking" style="background-image: url('{% static "localbus.jpeg" %}');">
         <div class="container">
             <div class="bus-content">
                 <div class="bus-text">

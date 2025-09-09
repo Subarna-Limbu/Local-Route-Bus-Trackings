@@ -200,7 +200,7 @@
             background: url('localbus.jpeg') center/cover;
             color: white;
             position: relative;
-            border-radius: 12px;
+            border-radius: 0px;
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(19, 15, 15, 0.1);
         }
@@ -254,7 +254,7 @@
 .registration-form {
     background: white;
     padding: 30px;
-    border-radius: 12px;
+    border-radius: 0px;
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
@@ -727,7 +727,8 @@
         </div>
     </header>
     <!-- Bus Tracking Section -->
-    <section class="bus-tracking">
+    {% load static %}
+    <section class="bus-tracking" style="background-image: url('{% static "localbus.jpeg" %}');">
         <div class="container">
             <div class="bus-content">
                   <div class="bus-text">
